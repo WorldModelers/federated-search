@@ -108,7 +108,6 @@ paths:
       - Download
       summary: Download datasets
       description: Download a full dataset by its ID
-      operationId: download_id
       parameters:
       - in: path
         name: data_location
