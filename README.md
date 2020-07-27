@@ -9,6 +9,6 @@ This repository contains the API specification for a federated search capability
 
 The Open API Specification file for this API is contained in [`federated_search_api.yaml`](https://github.com/WorldModelers/federated-search/blob/master/federated_search_api.yaml). Below is an example of the API usage:
 
-![Example API Call](images/api_call.png)
+![Example API Call](images/api_call1.png)
 
 In the future, this repository will house server code that manages this API.
