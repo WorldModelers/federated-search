@@ -170,7 +170,7 @@ components:
           default: All
           example: ISI
       required: 
-      - datamart
+      - data_location
   
     temporal_search:
       type: object
