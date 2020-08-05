@@ -1,0 +1,350 @@
+openapi: 3.0.0
+info:
+  title: World Modelers Federated Search API
+  description: "A federated search API that negotiates queries across Datamarts and\
+    \ the UAZ \nconcept mapping service on behalf of SuperMaaS and CauseMos.\n"
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+  description: Local server for testing federated search
+- url: https://wm:worldmodelersdatasearch@wm.auctus.vida-nyu.org/api/v1/
+paths:
+  /search:
+    post:
+      tags:
+      - Search
+      summary: Search over Datamarts
+      description: |
+        Search over Datamarts in order to find datasets and variables of interest.
+      operationId: search_post
+      requestBody:
+        description: |
+          Search query definition. Must provide `data_location` and _should_ provide at least one a `[geo, temporal, keyword]` filter.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body'
+            example:
+              data_location: NYU
+              keywords:
+              - wfp
+              - world food prices
+              time:
+                start: 2010-01-01 00:00:00
+                end: 2020-08-31 00:00:00
+              geo:
+                type: bbox
+                value:
+                  bbox:
+                    latitude1: 14.5
+                    longitude1: 3
+                    latitude2: 32
+                    longitude2: 46
+        required: true
+      responses:
+        "200":
+          description: SUCCESS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/search_result'
+      x-openapi-router-controller: swagger_server.controllers.search_controller
+  /search_concepts/{concept_name}:
+    get:
+      tags:
+      - Search
+      summary: Concept based search
+      description: |
+        Search based on concepts from the [World Modelers Ontology](https://github.com/worldmodelers/ontologies)
+      operationId: search_concepts_concept_name_get
+      parameters:
+      - name: concept_name
+        in: path
+        description: World Modelers ontology concept
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: SUCCESS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/search_result'
+      x-openapi-router-controller: swagger_server.controllers.search_controller
+  /metadata/{data_location}/{id_value}:
+    get:
+      tags:
+      - Metadata
+      summary: Obtain variabile/dataset metadata
+      description: |
+        Obtain metadata for specified datamart and dataset/variable ID
+      operationId: metadata_data_location_id_value_get
+      parameters:
+      - name: data_location
+        in: path
+        description: datamart from which data is downloaded
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: id_value
+        in: path
+        description: dataset_id (NYU) or variable_id (ISI)
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: SUCCESS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/metadata_result'
+      x-openapi-router-controller: swagger_server.controllers.metadata_controller
+  /download/{data_location}/{id_value}:
+    get:
+      tags:
+      - Download
+      summary: Download datasets
+      description: Download a full dataset by its ID
+      operationId: download_data_location_id_value_get
+      parameters:
+      - name: data_location
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+        example: NYU
+      - name: id_value
+        in: path
+        description: dataset_id of dataset
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+        example: NYU-123123123123123
+      responses:
+        "200":
+          description: Return a csv file
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+                x-content-type: text/csv
+      x-openapi-router-controller: swagger_server.controllers.download_controller
+components:
+  schemas:
+    search_result:
+      type: array
+      items:
+        $ref: '#/components/schemas/search_result_inner'
+    data_location:
+      required:
+      - data_location
+      type: object
+      properties:
+        data_location:
+          type: string
+          example: NYU
+          default: All
+          enum:
+          - ISI
+          - NYU
+          - All
+      description: The location of the data
+    temporal_search:
+      type: object
+      properties:
+        time:
+          $ref: '#/components/schemas/temporal_search_time'
+      description: Describes columns containing temporal information.
+    geospatial_search:
+      required:
+      - type
+      - value
+      type: object
+      properties:
+        type:
+          type: string
+          description: either bbox or place
+          enum:
+          - place
+          - bbox
+        value:
+          $ref: '#/components/schemas/geospatial_search_value'
+      description: Describes columns containing geospatial entities. West and South
+        are negative.
+    keyword_search:
+      type: object
+      properties:
+        keywords:
+          $ref: '#/components/schemas/keyword_search_keywords'
+      description: Text based search
+    metadata_result:
+      type: array
+      items:
+        $ref: '#/components/schemas/metadata_result_inner'
+    body:
+      anyOf:
+      - $ref: '#/components/schemas/geospatial_search'
+      - $ref: '#/components/schemas/temporal_search'
+      - $ref: '#/components/schemas/keyword_search'
+      oneOf:
+      - $ref: '#/components/schemas/data_location'
+    search_result_inner:
+      required:
+      - data_location
+      - id_value
+      - name
+      - score
+      type: object
+      properties:
+        data_location:
+          type: string
+          description: The location of the data (e.g. a Datamart)
+          example: NYU
+        id_value:
+          type: string
+          description: The id of the dataset or variable within the data location
+          example: NYU-123123123123123
+        name:
+          type: string
+          example: WFP dataset
+        description:
+          type: string
+          example: Food prices for Ethiopia
+        score:
+          type: number
+          description: "Ranking of the dataset or variable based on its \nproximity\
+            \ to the search of interest.\n"
+          example: 0.92
+      example:
+        score: 0.92
+        name: WFP dataset
+        description: Food prices for Ethiopia
+        data_location: NYU
+        id_value: NYU-123123123123123
+    temporal_search_time:
+      required:
+      - end
+      - start
+      type: object
+      properties:
+        start:
+          type: string
+          description: Dates-of-interest are more recent than this date
+          example: 2018-01-01 00:00:00
+        end:
+          type: string
+          description: Dates-of-interest are older than this date
+          example: 2020-08-31 23:00:00
+    geospatial_search_value_bbox:
+      required:
+      - latitude1
+      - latitude2
+      - longitude1
+      - longitude2
+      type: object
+      properties:
+        latitude1:
+          type: number
+          description: The latitude of the top left point.
+          example: 14.5
+        longitude1:
+          type: number
+          description: The longitude of the top left point.
+          example: 3
+        latitude2:
+          type: number
+          description: The latitude of the bottom right point.
+          example: 32.6
+        longitude2:
+          type: number
+          description: The longitude of the bottom right point.
+          example: 46.8
+    geospatial_search_value_place:
+      required:
+      - area_name
+      type: object
+      properties:
+        area_name:
+          type: array
+          example: Ethiopia
+          items:
+            type: string
+      description: list of names/places to search
+    geospatial_search_value:
+      properties:
+        bbox:
+          $ref: '#/components/schemas/geospatial_search_value_bbox'
+        place:
+          $ref: '#/components/schemas/geospatial_search_value_place'
+    keyword_search_keywords:
+      required:
+      - keywords
+      type: object
+      properties:
+        keywords:
+          type: array
+          example:
+          - wfp
+          - world food price
+          items:
+            type: string
+    metadata_result_inner:
+      required:
+      - description
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the Dataset
+          example: WFP Prices Eth
+        description:
+          type: string
+          example: World Food Program prices for Ethiopia
+        id_value:
+          type: string
+          description: The id of the dataset or variable within the data location
+          example: ISI_wfp_maize
+        z_meta:
+          type: array
+          example:
+          - all meta here
+          items:
+            type: array
+        url:
+          type: string
+          example: http://wfp.com/prices
+        source:
+          type: string
+          example: World Food Program
+        spatial_resolution:
+          type: string
+          example: country
+        temporal_resolution:
+          type: string
+          example: year
+
+      example:
+        meta:
+        - all meta here
+        id_value: ISI_wfp_maize
+        name: WFP Prices Eth
+        description: World Food Program prices for Ethiopia
+        source: World Food Program
+        temporal_resolution: year
+        url: http://wfp.com/prices
+        spatial_resolution: country
+
