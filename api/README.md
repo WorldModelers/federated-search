@@ -77,9 +77,9 @@ Parameters:
 
 `data_location": "NYU"`
 
-`geo['type']`: This can be either `bbox` for bounding box (northwest:latitude1/longitude1 and southeast: latitude2/longitude2) OR a wiki place name (see image below).
+`geo['type']`: This can be either `bbox` for bounding box (northwest point :latitude1/longitude1 and southeast point: latitude2/longitude2) OR a wiki place name (see image below).
 
-`keywords`: are a list of <i>things</i> you would like to search for.
+`keywords`: A list of <i>things</i> you would like to search.
 
 `time`: Enter your start and end time of your search in the ISO 8601 format shown.
 
@@ -91,9 +91,9 @@ Parameters:
 
 Parameters:
 
-`data_location": "ISI"`
+`data_location": ISI`
 
-`geo['type']`: Enter a wiki place name; be sure to change the dictionary key as shown in the image above.
+`geo['type']`: Enter a wiki place name; be sure to change the dictionary keys (`bbox` to `place` as shown in the image above).
 
 `keywords`: Enter a list of <i>things</i> you would like to search for.
 
@@ -101,14 +101,14 @@ Parameters:
 
 For either ISI or NYU:
 
-`data_location` = "ISI" or "NYU
+`data_location` = `ISI` or `NYU`
 
 `id_value` = dataset ID from either datamart. 
 
 ### Download Dataset
 
 NYU:
-`data_location` = "NYU
+`data_location = NYU`
 
 `id_value` = dataset ID
 
