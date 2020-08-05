@@ -133,5 +133,14 @@ def nyu_schema_meta(raw_meta):
                         "z_meta": meta 
                         }
                  
-    return nyu_meta_results    
+    return nyu_meta_results   
+     
+############ DOWNLOAD FUNCTION ############# 
 
+def nyu_download(id_value, nyu_download_url):
+
+    response = requests.get(nyu_download_url + id_value)
+    response.raise_for_status()
+    downloaded = response.content
+    
+    return downloaded 

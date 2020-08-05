@@ -135,10 +135,4 @@ def isi_schema_meta(raw_meta):
 
 ############ DOWNLOAD FUNCTION ############# 
 
-def nyu_download(id_value, nyu_download_url):
-
-    response = requests.get(nyu_download_url + id_value)
-    response.raise_for_status()
-    downloaded = response.content
-    
-    return downloaded       
+      
