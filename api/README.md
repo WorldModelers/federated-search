@@ -3,7 +3,7 @@
 ## Contents
 
 1. [Overview](#overview)
-2. [Running the UI](#running-the-ui)
+2. [Running the API](#running-the-API)
 3. [Datamart Functionality](#datamart-functionality)
 
 ## Overview
@@ -18,7 +18,7 @@ This directory allows you build and test the Federated Search backend API genera
    
 Each Datamart has varying functionality, see below for instructions.
 
-## Running the UI
+## Running the API
 
 ### Requirements 
     Python 3.5.2+
