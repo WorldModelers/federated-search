@@ -70,7 +70,7 @@ Below is a table of current functionality:
 ### NYU Search
 
 <p align="center">
-<img src="https://github.com/WorldModelers/federated-search/blob/master/api/images/search.png" alt="drawing" width="400"/>
+<img src="https://github.com/WorldModelers/federated-search/blob/master/api/images/search.png" alt="drawing" width="300"/>
 </p>
 
 Parameters:
@@ -86,7 +86,7 @@ Parameters:
 ### ISI Search
 
 <p align="center">
-<img src="https://github.com/WorldModelers/federated-search/blob/master/api/images/isi_search.png" alt="drawing" width="400"/>
+<img src="https://github.com/WorldModelers/federated-search/blob/master/api/images/isi_search.png" alt="drawing" width="300"/>
 </p>
 
 Parameters:
