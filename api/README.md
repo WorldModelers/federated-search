@@ -75,7 +75,7 @@ Below is a table of current functionality:
 
 Parameters:
 
-`data_location": "NYU"`
+`"data_location": NYU`
 
 `geo['type']`: This can be either `bbox` for bounding box (northwest point :latitude1/longitude1 and southeast point: latitude2/longitude2) OR a wiki place name (see image below).
 
@@ -91,7 +91,7 @@ Parameters:
 
 Parameters:
 
-`data_location": ISI`
+`"data_location": ISI`
 
 `geo['type']`: Enter a wiki place name; be sure to change the dictionary keys (`bbox` to `place` as shown in the image above).
 
@@ -101,14 +101,14 @@ Parameters:
 
 For either ISI or NYU:
 
-`data_location` = `ISI` or `NYU`
+`"data_location"` = `ISI` or `NYU`
 
 `id_value` = dataset ID from either datamart. 
 
 ### Download Dataset
 
 NYU:
-`data_location = NYU`
+`"data_location" = NYU`
 
 `id_value` = dataset ID
 
