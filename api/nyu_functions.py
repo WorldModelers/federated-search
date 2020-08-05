@@ -8,7 +8,7 @@ from requests import get,post,put,delete
 
 def nyu_search(body, nyu_url): 
 
-    # Copy dic to maintain original user serach BODY
+    # Copy dic to maintain original user search BODY
     new_body = copy.deepcopy(body) 
 
     #init empty dicts to check if NOT {} --> add to search
@@ -19,7 +19,7 @@ def nyu_search(body, nyu_url):
     geo = {}
     time = {}
 
-    # Run thru all BODY keys and buld search dict which is sent to NYU server
+    # Run thru all BODY keys and build search dict which is sent to NYU server
     for key in new_body.keys():
 
         if key == "keywords":
@@ -36,12 +36,10 @@ def nyu_search(body, nyu_url):
 
             # PLACE search (wiki admin name)
             if geo_type == "place":
-                
                 geo = new_body["geo"]["value"]["place"]
                 geo["type"] = "geospatial_variable"
 
         if key == "time":
-
             time = new_body["time"]  
             time["type"]= "temporal_variable"
               
@@ -52,7 +50,7 @@ def nyu_search(body, nyu_url):
     query = [{
             "keywords": keywords,
             "variables": checked
-             }, "NYU Datamart"]
+             }]
 
     response = requests.post(nyu_url, data={'query': json.dumps(query[0])})
     response.raise_for_status()
