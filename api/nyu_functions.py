@@ -76,7 +76,7 @@ def schema_results(raw_results):
         
         descr = "None"
         if "description" in result['metadata'].keys():
-            descr = result['metadata']['description']
+            descr = result['metadata'].get('description', "None")
         
         score = result['score']
     
@@ -113,7 +113,7 @@ def nyu_metadata(id_value, nyu_meta_url):
 def nyu_schema_meta(raw_meta):
     
     name = raw_meta['metadata']['name']
-    descr = raw_meta['metadata']['description']
+    descr = raw_meta['metadata'].get('description', "None")
     id_value = raw_meta.get('id', "None")
     source = raw_meta['metadata'].get('source', "None")
     temporal_resolution = "None"
