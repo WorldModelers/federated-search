@@ -64,7 +64,7 @@ http://localhost:8080/swagger.json
 Below is a table of current functionality:
 
 <p align="center">
-<img src="https://github.com/WorldModelers/federated-search/blob/master/api/images/datamart_caps.png" alt="drawing" width="800"/>
+<img src="https://github.com/WorldModelers/federated-search/blob/master/api/images/datamart_caps.png" alt="drawing" width="550"/>
 </p>
 
 ### NYU Search
