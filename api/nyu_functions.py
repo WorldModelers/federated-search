@@ -116,6 +116,7 @@ def nyu_schema_meta(raw_meta):
     descr = raw_meta['metadata']['description']
     id_value = raw_meta.get('id', "None")
     source = raw_meta['metadata'].get('source', "None")
+    temporal_resolution = "None"
     for elem in raw_meta['metadata']['columns']:
         if elem['name'] == "date":
             temporal_resolution = elem.get('temporal_resolution', "None")
