@@ -6,114 +6,144 @@ Created on Mon Aug  3 13:13:55 2020
 @author: travishartman
 """
 
-############ SEARCH FUNCTIONS ############ 
-
+from requests import get,post,put,delete
+from io import StringIO
+import pandas as pd
+import configparser
+import requests
 import json
 import copy
-import requests
-from requests import get,post,put,delete
+import os
 
-# Function to send keywords to ISI search endpoint
+
+############ SEARCH FUNCTIONS ############ 
+
+# Search ISI API
 def isi_search(body, base_url):
-    
-    # verify that the search has proper filters:
-    param_errors = isi_search_validate(body)    
-    
-    if param_errors['error'] != []:
-        return param_errors
 
-    else:       
-        
-        # call urlify function to format url search string, searches " OR" keywords (not "and")
-        search_url = urlify_search(body, base_url)
-        #send get call to server
-        response = get(search_url)
+    # verify that the search has proper (and at least one) parameter(s)
+    param_errors = isi_search_validate(body)  
 
-        json_string = response._content
-        raw_results = json.loads(json_string)
-        
-        # call schema function to get into swagger format
-        isi_results = isi_schema_results(raw_results)
+    if param_errors != []:
+        return f'{param_errors}', 405, {'x-error': 'method not allowed'}
 
-        return isi_results
+    else:
+        # KEYWORD SEARCH
+        if body.get("keywords", "None") != "None":
+            # call urlify function to format url search string, searches " OR" keywords (not "and")
+            search_url = urlify_search_keywords(body, base_url)
+            
+            #send get call to server
+            response = get(search_url)
+            json_string = response._content
+            raw_results = json.loads(json_string)
+            
+            # call schema function to get into swagger schema format
+            isi_keyword_results = isi_schema_results(raw_results)
 
+            return isi_keyword_results
+  
 
+# transform raw return into schema format
 def isi_schema_results(raw_results):
     
     isi_schema = []
     temp_dict = {}
     
     for result in raw_results:
-        data_location = "ISI Datamart"
-        dataset_id = result['dataset_id']
-        name = result['name']
         
+        data_location = "ISI Datamart"
+        dataset_id = result.get('dataset_id', "None")
+        name = result.get('name', "None")
         descr = "None"
-        score = result['rank']
+        score = result.get('rank', "None")
     
         temp_dict= {"data_location": data_location,
                     "id_value": dataset_id,
                     "name": name,
                     "description": descr,
                     "score": score}
-        isi_schema.append(temp_dict)
         
-    #schema_results = json.dumps(isi_schema_results, indent = 4)
+        isi_schema.append(temp_dict)
+    
+    # Testing...    
+    # schema_results = json.dumps(isi_schema_results, indent = 4)
     
     return isi_schema
 
 
-# Currently (03AUG2020) ISI does not support temporal of bbox searches
+# Currently (05AUG2020) ISI does not support temporal of bbox searches
 # This function prints an "error" and exits search if filter has unsupported filters
 def isi_search_validate(body):
-    vlad = [] 
 
-    get_data ={
-            "geo": body['geo'].get("type", "None"),
-            "keywords":  body.get("keywords", "None"),
-            "time": body.get("time", "None")
+    vlad= []
+    get_data ={"keywords": body.get("keywords", {}),
+               "geo": body.get('geo', {}).get('type', {}),
+               "time": body.get("time", {})
               }
-    
-    if get_data['geo'] == "bbox":
-        geo_error = 'Error: ISI does not support bounding box search. Enter--> type: place AND value: area_name: <place name>'
-        vlad.append(geo_error)
-    if get_data['time'] != "None":           
-        time_error = 'Error: ISI does not support temporal searches; remove the time filter'        
-        vlad.append(time_error)
+
+    #overall check, ensure not null search
+    tah = [v for k,v in get_data.items() if v != {}]
+
+    if len(tah) == 0:
+        err = "Search requires at least one parameter besides data_location"
+        vlad.append(err)
+
+    else:
+        #Check for specific keys
+        if get_data['geo'] != {}:
+            geo_error = 'Error: ISI does not support geo search filter with keywords.'
+            vlad.append(geo_error)
         
-    err = {"error": vlad}
-    
-    if err["error"] != []:
-        for e in err["error"]:
-            print(e)
-
-    return err
+        if get_data['time'] != {}:           
+            time_error = 'Error: ISI does not support temporal searches; remove the time filter'     
+            vlad.append(time_error)
  
-# Take user's keywords and format into url string to send to ISI server    
-def urlify_search(body, base_url):
-    amp_keywords=[]
-    
-    for words in body['keywords']:
-        new_word = words.replace(" ", "%20")
-        amp_keywords.append(new_word)
-    
-    search_string ='&'.join(amp_keywords)
-    
-    search_url = base_url + search_string.strip() 
-    
-    return search_url
+    return vlad 
 
+# Take user's keywords and format into url string to send to ISI server    
+def urlify_search_keywords(body, base_url):
+
+    amp_keywords=[]
+
+    keywords = body.get('keywords', "None")
+
+    if keywords != "None":
+        for words in body['keywords']:
+            new_word = words.replace(" ", "%20")
+            amp_keywords.append(new_word)
+        
+        keyword_string ='&'.join(amp_keywords)
+        
+        search_url = base_url + keyword_string.strip()
+
+    return search_url
 
 ############ METADATA FUNCTIONS ############ 
 
+# Query ISI for metadata abot a variable
+def isi_metadata(id_value, isi_base_url):
+
+    isi_meta_url = f'{isi_base_url}/metadata/datasets/'
+    search_url = isi_meta_url + id_value
+    response = get(search_url)
+
+    json_string = response._content
+    raw_meta = json.loads(json_string)
+
+    isi_meta_results = isi_schema_meta(raw_meta)
+
+    return isi_meta_results 
     
+
+# format raw results to schema    
 def isi_schema_meta(raw_meta):
 
-    #raw_meat is a list with one elem (a dict)
+    #raw_meta is a list with one elem (a dict)
     raw_dict = raw_meta[0]
     name = raw_dict['name']
     descr = raw_dict['description']
-    id_value = raw_dict['dataset_id']
+    dataset_id = raw_dict['dataset_id']
     url = raw_dict['url']
     source = "None"
     temporal_resolution = "None"
@@ -123,7 +153,7 @@ def isi_schema_meta(raw_meta):
     isi_meta_results = {"data_location": "ISI",
                         "name": name,
                         "description": descr,
-                        "id_value": id_value,
+                        "dataset_id": dataset_id,
                         "source": url,
                         "temporal_resolution": temporal_resolution,
                         "spatial_resolution": spatial_resolution,
@@ -132,7 +162,34 @@ def isi_schema_meta(raw_meta):
     
     return isi_meta_results
 
-
 ############ DOWNLOAD FUNCTION ############# 
 
-      
+# send list of variables to ISI API to download a dataset
+def download_isi(body, data_location, dataset_id, datamart_api_url):
+
+    df_all_variables = pd.DataFrame()
+    
+    variable_ids = body
+
+    if variable_ids == []:
+        err = {"Search requires at least one variable"}
+        return f'{err}', 405, {'x-error': 'method not allowed'}
+    
+    else:
+        for var in variable_ids:
+
+            response = get(f'{datamart_api_url}/datasets/{dataset_id}/variables/{var}')
+            df = pd.read_csv(StringIO(response.text))
+            
+            #if first variable...
+            if df_all_variables.shape[0] == 0:
+                df_all_variables = df
+
+            else:
+                df_all_variables = df_all_variables.append(df)
+
+        #clean it up and covert to csv
+        df_all_variables = df_all_variables.reset_index().drop(columns=['index'])
+        df_all_variables = df_all_variables.to_csv()     
+
+        return df_all_variables      

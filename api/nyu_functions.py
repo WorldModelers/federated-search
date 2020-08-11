@@ -1,14 +1,23 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Aug  3 13:13:55 2020
+
+@author: travishartman
+"""
+
+from requests import get,post,put,delete
+import requests
 import json
 import copy
-import requests
-from requests import get,post,put,delete
 
 
 ########### SEARCH FUNCTIONS ###########
 
+# Search for keywords, temporal intervals, and/or geospatial areas
 def nyu_search(body, nyu_url): 
 
-    # Copy dic to maintain original user search BODY
+    # Copy dict to maintain original user search BODY
     new_body = copy.deepcopy(body) 
 
     #init empty dicts to check if NOT {} --> add to search
@@ -18,14 +27,15 @@ def nyu_search(body, nyu_url):
     #add search to relevant dict to be checked if null
     geo = {}
     time = {}
+    keywords = {}
 
     # Run thru all BODY keys and build search dict which is sent to NYU server
     for key in new_body.keys():
-
+        
         if key == "keywords":
             keywords = new_body["keywords"]
 
-        # GEO search is an either/or....bbox OR place
+        # GEO search requires geo "variable"
         if key == "geo":
             geo_type = new_body["geo"]["type"]
 
@@ -39,27 +49,38 @@ def nyu_search(body, nyu_url):
                 geo = new_body["geo"]["value"]["place"]
                 geo["type"] = "geospatial_variable"
 
+        # Time search requires geo "variable"
         if key == "time":
             time = new_body["time"]  
             time["type"]= "temporal_variable"
               
-    #query key "variables" takes a list of dicts
-    checker = [geo,time]
-    checked = [x for x in checker if x != {}]
-  
-    query = [{
-            "keywords": keywords,
-            "variables": checked
-             }]
+    # Must have at least one search parameter beyond "data_location"
+    null_check = [keywords, geo, time]
+    tah = [x for x in null_check if x != {}]
 
-    response = requests.post(nyu_url, data={'query': json.dumps(query[0])})
-    response.raise_for_status()
-    raw_results = response.json()['results']   
-    
-    #call function to format via schema
-    nyu_results = schema_results(raw_results)
-    
-    return nyu_results
+    if len(tah) == 0:
+        err = {"Search requires at least one parameter besides data_location"}
+        return f'{err}', 405, {'x-error': 'method not allowed'}
+
+    else:
+        #check for data and format query key "variables" into list of dicts
+        checker = [geo,time]
+        checked = [x for x in checker if x != {}]
+      
+        query = [{
+                "keywords": keywords,
+                "variables": checked
+                 }]
+
+        #  call server
+        response = requests.post(nyu_url, data={'query': json.dumps(query[0])})
+        response.raise_for_status()
+        raw_results = response.json()['results']   
+        
+        #format to schema
+        nyu_results = schema_results(raw_results)
+        
+        return nyu_results
 
 #Format response result to swagger schema
 def schema_results(raw_results):
@@ -69,22 +90,23 @@ def schema_results(raw_results):
     
     for result in raw_results:
         data_location = "NYU Datamart"
-        dataset_id = result['id']
-        name = result['metadata']['name']
-        
+        dataset_id = result.get('id', "None")
+        name = result['metadata'].get('name', "None")
+        score = result.get('score', "None")
+
         descr = "None"
         if "description" in result['metadata'].keys():
             descr = result['metadata'].get('description', "None")
-        
-        score = result['score']
     
         temp_dict= {"data_location": data_location,
                     "id_value": dataset_id,
                     "name": name,
                     "description": descr,
                     "score": score}
+
         schema_results.append(temp_dict)
-        
+    
+    # testing...    
     #schema_results = json.dumps(schema_results, indent = 4) 
      
     return schema_results
@@ -110,16 +132,17 @@ def nyu_metadata(id_value, nyu_meta_url):
  #Transform raw result to swagger schema
 def nyu_schema_meta(raw_meta):
     
-    name = raw_meta['metadata']['name']
+    name = raw_meta['metadata'].get('name', "None")
     descr = raw_meta['metadata'].get('description', "None")
     id_value = raw_meta.get('id', "None")
     source = raw_meta['metadata'].get('source', "None")
+    spatial_resolution = raw_meta['metadata']['spatial_coverage'][0].get('admin', "None")
+    meta = raw_meta.get('metadata', "None")
+
     temporal_resolution = "None"
     for elem in raw_meta['metadata']['columns']:
         if elem['name'] == "date":
             temporal_resolution = elem.get('temporal_resolution', "None")
-    spatial_resolution = raw_meta['metadata']['spatial_coverage'][0].get('admin', "None")
-    meta = raw_meta.get('metadata', "None")
     
     nyu_meta_results = {"data_location": "NYU",
                         "name": name,
@@ -135,9 +158,10 @@ def nyu_schema_meta(raw_meta):
      
 ############ DOWNLOAD FUNCTION ############# 
 
-def nyu_download(id_value, nyu_download_url):
+# Download NYU dataset with known dataset_ID)
+def nyu_download(dataset_ID, nyu_download_url):
 
-    response = requests.get(nyu_download_url + id_value)
+    response = requests.get(nyu_download_url + dataset_ID)
     response.raise_for_status()
     downloaded = response.content
     

@@ -97,7 +97,6 @@ paths:
             type: string
           required: true
           description: dataset_id (NYU) or variable_id (ISI)
-          
       responses:
         200:
           description: "SUCCESS"
@@ -106,22 +105,66 @@ paths:
               schema:
                 $ref: '#/components/schemas/metadata_result'  
                 
+  /download_variables/{data_location}/{dataset_id}:
+    post:
+      tags:
+      - Download
+      summary: Download ISI variables
+      description: |
+          Download variables into single file with desired variables from the desired dataset
+      parameters:
+      - in: path
+        name: data_location
+        schema:
+          type: string
+          enum:
+            - ISI           
+        required: true
+        example: ISI      
+      - in: path
+        name: dataset_id
+        schema:
+          type: string
+        required: true
+        example: WDI
+      requestBody:
+        description: |
+          Search query definition. Enter the ISI variable_IDs you would like to download
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+            example: access_to_electricity_of_population
+      responses:
+        '200':
+          description: "Return a csv file"
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary   
 
-  /download/{data_location}/{id_value}:
+
+  /download/{data_location}/{dataset_id}:
     get:
       tags:
       - Download
-      summary: Download datasets
+      summary: Download NYU datasets
       description: Download a full dataset by its ID
       parameters:
       - in: path
         name: data_location
         schema:
           type: string
+          enum:
+            - NYU          
         required: true
         example: NYU
       - in: path
-        name: id_value
+        name: dataset_id
         description: dataset_id of dataset
         schema:
           type: string
@@ -238,7 +281,6 @@ components:
                 - longitude1
                 - latitude2
                 - longitude2
-          
               place:
                 type: object
                 description: list of names/places to search 
@@ -253,7 +295,7 @@ components:
         required:
         - type
         - value
-            
+        
     keyword_search:
       type: object
       description: Text based search  
