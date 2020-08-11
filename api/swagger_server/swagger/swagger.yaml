@@ -15,11 +15,13 @@ paths:
       - Search
       summary: Search over Datamarts
       description: |
-        Search over Datamarts in order to find datasets and variables of interest.
+        Search over Datamarts to find datasets and variables of interest.
       operationId: search_post
       requestBody:
         description: |
-          Search query definition. Must provide `data_location` and _should_ provide at least one a `[geo, temporal, keyword]` filter.
+          Search query definition. _Must_ provide `data_location` and _at least_ one of `[geo, temporal, keywords]` filter.<br> 
+          NYU Options: One, or combo of [geo, temporal, keywords]<br>
+          ISI Option: [Keywords] 
         content:
           application/json:
             schema:
@@ -78,22 +80,25 @@ paths:
     get:
       tags:
       - Metadata
-      summary: Obtain variabile/dataset metadata
+      summary: Obtain metadata for ISI/NYU datasets
       description: |
-        Obtain metadata for specified datamart and dataset/variable ID
+        Obtain metadata for specified datamart and dataset ID
       operationId: metadata_data_location_id_value_get
       parameters:
       - name: data_location
         in: path
-        description: datamart from which data is downloaded
+        description: "Select Datamart"
         required: true
         style: simple
         explode: false
         schema:
           type: string
+          enum:
+          - NYU
+          - ISI
       - name: id_value
         in: path
-        description: dataset_id (NYU) or variable_id (ISI)
+        description: Enter dataset_id
         required: true
         style: simple
         explode: false
@@ -107,13 +112,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/metadata_result'
       x-openapi-router-controller: swagger_server.controllers.metadata_controller
-  /download/{data_location}/{id_value}:
-    get:
+  /download_variables/{data_location}/{dataset_id}:
+    post:
       tags:
       - Download
-      summary: Download datasets
-      description: Download a full dataset by its ID
-      operationId: download_data_location_id_value_get
+      summary: Download ISI variables
+      description: |
+        ISI ONLY: Download variables into single file from an ISI dataset
+      operationId: download_variables_data_location_dataset_id_post
       parameters:
       - name: data_location
         in: path
@@ -122,8 +128,57 @@ paths:
         explode: false
         schema:
           type: string
+          enum:
+          - ISI
+        example: ISI
+      - name: dataset_id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+        example: WDI
+      requestBody:
+        description: |
+          Enter the ISI variable_IDs you would like to download. At least one is required.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+            example: ["access_to_electricity_of_population", "access_to_clean_fuels_and_technologies_for_cooking_of_population"]
+        required: true
+      responses:
+        "200":
+          description: Return a csv file
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+                x-content-type: text/csv
+      x-openapi-router-controller: swagger_server.controllers.download_controller
+  /download/{data_location}/{dataset_id}:
+    get:
+      tags:
+      - Download
+      summary: Download NYU datasets
+      description: "NYU ONLY: Download dataset by its daataset_id"
+      operationId: download_data_location_dataset_id_get
+      parameters:
+      - name: data_location
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          enum:
+          - NYU
         example: NYU
-      - name: id_value
+      - name: dataset_id
         in: path
         description: dataset_id of dataset
         required: true
@@ -131,7 +186,7 @@ paths:
         explode: false
         schema:
           type: string
-        example: NYU-123123123123123
+        example: NYU-123123123
       responses:
         "200":
           description: Return a csv file
@@ -314,16 +369,10 @@ components:
         description:
           type: string
           example: World Food Program prices for Ethiopia
-        id_value:
+        dataset_id:
           type: string
           description: The id of the dataset or variable within the data location
           example: ISI_wfp_maize
-        z_meta:
-          type: array
-          example:
-          - all meta here
-          items:
-            type: array
         url:
           type: string
           example: http://wfp.com/prices
@@ -336,11 +385,16 @@ components:
         temporal_resolution:
           type: string
           example: year
-
+        meta:
+          type: array
+          example:
+          - all meta here
+          items:
+            type: array
       example:
         meta:
         - all meta here
-        id_value: ISI_wfp_maize
+        dataset_id: ISI_wfp_maize
         name: WFP Prices Eth
         description: World Food Program prices for Ethiopia
         source: World Food Program
