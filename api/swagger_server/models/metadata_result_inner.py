@@ -14,15 +14,15 @@ class MetadataResultInner(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, name: str=None, description: str=None, id_value: str=None, url: str=None, source: str=None, spatial_resolution: str=None, temporal_resolution: str=None, meta: List[List]=None):  # noqa: E501
+    def __init__(self, name: str=None, description: str=None, dataset_id: str=None, url: str=None, source: str=None, spatial_resolution: str=None, temporal_resolution: str=None, meta: List[List]=None):  # noqa: E501
         """MetadataResultInner - a model defined in Swagger
 
         :param name: The name of this MetadataResultInner.  # noqa: E501
         :type name: str
         :param description: The description of this MetadataResultInner.  # noqa: E501
         :type description: str
-        :param id_value: The id_value of this MetadataResultInner.  # noqa: E501
-        :type id_value: str
+        :param dataset_id: The dataset_id of this MetadataResultInner.  # noqa: E501
+        :type dataset_id: str
         :param url: The url of this MetadataResultInner.  # noqa: E501
         :type url: str
         :param source: The source of this MetadataResultInner.  # noqa: E501
@@ -37,7 +37,7 @@ class MetadataResultInner(Model):
         self.swagger_types = {
             'name': str,
             'description': str,
-            'id_value': str,
+            'dataset_id': str,
             'url': str,
             'source': str,
             'spatial_resolution': str,
@@ -48,7 +48,7 @@ class MetadataResultInner(Model):
         self.attribute_map = {
             'name': 'name',
             'description': 'description',
-            'id_value': 'id_value',
+            'dataset_id': 'dataset_id',
             'url': 'url',
             'source': 'source',
             'spatial_resolution': 'spatial_resolution',
@@ -57,7 +57,7 @@ class MetadataResultInner(Model):
         }
         self._name = name
         self._description = description
-        self._id_value = id_value
+        self._dataset_id = dataset_id
         self._url = url
         self._source = source
         self._spatial_resolution = spatial_resolution
@@ -124,27 +124,27 @@ class MetadataResultInner(Model):
         self._description = description
 
     @property
-    def id_value(self) -> str:
-        """Gets the id_value of this MetadataResultInner.
+    def dataset_id(self) -> str:
+        """Gets the dataset_id of this MetadataResultInner.
 
         The id of the dataset or variable within the data location  # noqa: E501
 
-        :return: The id_value of this MetadataResultInner.
+        :return: The dataset_id of this MetadataResultInner.
         :rtype: str
         """
-        return self._id_value
+        return self._dataset_id
 
-    @id_value.setter
-    def id_value(self, id_value: str):
-        """Sets the id_value of this MetadataResultInner.
+    @dataset_id.setter
+    def dataset_id(self, dataset_id: str):
+        """Sets the dataset_id of this MetadataResultInner.
 
         The id of the dataset or variable within the data location  # noqa: E501
 
-        :param id_value: The id_value of this MetadataResultInner.
-        :type id_value: str
+        :param dataset_id: The dataset_id of this MetadataResultInner.
+        :type dataset_id: str
         """
 
-        self._id_value = id_value
+        self._dataset_id = dataset_id
 
     @property
     def url(self) -> str:
