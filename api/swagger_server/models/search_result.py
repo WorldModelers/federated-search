@@ -6,7 +6,6 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from swagger_server.models.base_model_ import Model
-from swagger_server.models.search_result_inner import SearchResultInner  # noqa: F401,E501
 from swagger_server import util
 
 
@@ -15,15 +14,45 @@ class SearchResult(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self):  # noqa: E501
+    def __init__(self, data_location: str=None, dataset_id: str=None, variable_id: str=None, name: str=None, description: str=None, score: float=None):  # noqa: E501
         """SearchResult - a model defined in Swagger
 
+        :param data_location: The data_location of this SearchResult.  # noqa: E501
+        :type data_location: str
+        :param dataset_id: The dataset_id of this SearchResult.  # noqa: E501
+        :type dataset_id: str
+        :param variable_id: The variable_id of this SearchResult.  # noqa: E501
+        :type variable_id: str
+        :param name: The name of this SearchResult.  # noqa: E501
+        :type name: str
+        :param description: The description of this SearchResult.  # noqa: E501
+        :type description: str
+        :param score: The score of this SearchResult.  # noqa: E501
+        :type score: float
         """
         self.swagger_types = {
+            'data_location': str,
+            'dataset_id': str,
+            'variable_id': str,
+            'name': str,
+            'description': str,
+            'score': float
         }
 
         self.attribute_map = {
+            'data_location': 'data_location',
+            'dataset_id': 'dataset_id',
+            'variable_id': 'variable_id',
+            'name': 'name',
+            'description': 'description',
+            'score': 'score'
         }
+        self._data_location = data_location
+        self._dataset_id = dataset_id
+        self._variable_id = variable_id
+        self._name = name
+        self._description = description
+        self._score = score
 
     @classmethod
     def from_dict(cls, dikt) -> 'SearchResult':
@@ -35,3 +64,145 @@ class SearchResult(Model):
         :rtype: SearchResult
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def data_location(self) -> str:
+        """Gets the data_location of this SearchResult.
+
+        The location of the data (e.g. a Datamart)  # noqa: E501
+
+        :return: The data_location of this SearchResult.
+        :rtype: str
+        """
+        return self._data_location
+
+    @data_location.setter
+    def data_location(self, data_location: str):
+        """Sets the data_location of this SearchResult.
+
+        The location of the data (e.g. a Datamart)  # noqa: E501
+
+        :param data_location: The data_location of this SearchResult.
+        :type data_location: str
+        """
+        if data_location is None:
+            raise ValueError("Invalid value for `data_location`, must not be `None`")  # noqa: E501
+
+        self._data_location = data_location
+
+    @property
+    def dataset_id(self) -> str:
+        """Gets the dataset_id of this SearchResult.
+
+        The id of the dataset or variable within the data location  # noqa: E501
+
+        :return: The dataset_id of this SearchResult.
+        :rtype: str
+        """
+        return self._dataset_id
+
+    @dataset_id.setter
+    def dataset_id(self, dataset_id: str):
+        """Sets the dataset_id of this SearchResult.
+
+        The id of the dataset or variable within the data location  # noqa: E501
+
+        :param dataset_id: The dataset_id of this SearchResult.
+        :type dataset_id: str
+        """
+        if dataset_id is None:
+            raise ValueError("Invalid value for `dataset_id`, must not be `None`")  # noqa: E501
+
+        self._dataset_id = dataset_id
+
+    @property
+    def variable_id(self) -> str:
+        """Gets the variable_id of this SearchResult.
+
+        The id of the variable  # noqa: E501
+
+        :return: The variable_id of this SearchResult.
+        :rtype: str
+        """
+        return self._variable_id
+
+    @variable_id.setter
+    def variable_id(self, variable_id: str):
+        """Sets the variable_id of this SearchResult.
+
+        The id of the variable  # noqa: E501
+
+        :param variable_id: The variable_id of this SearchResult.
+        :type variable_id: str
+        """
+
+        self._variable_id = variable_id
+
+    @property
+    def name(self) -> str:
+        """Gets the name of this SearchResult.
+
+
+        :return: The name of this SearchResult.
+        :rtype: str
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name: str):
+        """Sets the name of this SearchResult.
+
+
+        :param name: The name of this SearchResult.
+        :type name: str
+        """
+        if name is None:
+            raise ValueError("Invalid value for `name`, must not be `None`")  # noqa: E501
+
+        self._name = name
+
+    @property
+    def description(self) -> str:
+        """Gets the description of this SearchResult.
+
+
+        :return: The description of this SearchResult.
+        :rtype: str
+        """
+        return self._description
+
+    @description.setter
+    def description(self, description: str):
+        """Sets the description of this SearchResult.
+
+
+        :param description: The description of this SearchResult.
+        :type description: str
+        """
+
+        self._description = description
+
+    @property
+    def score(self) -> float:
+        """Gets the score of this SearchResult.
+
+        Ranking of the dataset or variable based on its  proximity to the search of interest.   # noqa: E501
+
+        :return: The score of this SearchResult.
+        :rtype: float
+        """
+        return self._score
+
+    @score.setter
+    def score(self, score: float):
+        """Sets the score of this SearchResult.
+
+        Ranking of the dataset or variable based on its  proximity to the search of interest.   # noqa: E501
+
+        :param score: The score of this SearchResult.
+        :type score: float
+        """
+        if score is None:
+            raise ValueError("Invalid value for `score`, must not be `None`")  # noqa: E501
+
+        self._score = score
