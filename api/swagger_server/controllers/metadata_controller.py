@@ -29,7 +29,7 @@ nyu_pwd = config['NYU']['password']
 
 
 # Either ISI/NYU: get metadata for variable/dataset
-def metadata_data_location_dataset_id_get(data_location, variable_id, dataset_id):
+def metadata_data_location_dataset_id_get(data_location, dataset_id, variable_id=None):
     
     #NYU
     if data_location == "NYU":
