@@ -49,17 +49,18 @@ def isi_schema_results(raw_results):
     
     isi_schema = []
     temp_dict = {}
-    
     for result in raw_results:
         
         data_location = "ISI Datamart"
         dataset_id = result.get('dataset_id', "None")
+        variable_id = result.get('variable_id', "None")
         name = result.get('name', "None")
         descr = "None"
         score = result.get('rank', "None")
     
         temp_dict= {"data_location": data_location,
-                    "id_value": dataset_id,
+                    "dataset_id": dataset_id,
+                    "variable_id": variable_id,
                     "name": name,
                     "description": descr,
                     "score": score}
@@ -92,7 +93,7 @@ def isi_search_validate(body):
     else:
         #Check for specific keys
         if get_data['geo'] != {}:
-            geo_error = 'Error: ISI does not support geo search filter with keywords.'
+            geo_error = 'Error: ISI does not support geospatial searches; remove the geo filter.'
             vlad.append(geo_error)
         
         if get_data['time'] != {}:           
@@ -121,46 +122,88 @@ def urlify_search_keywords(body, base_url):
 
 ############ METADATA FUNCTIONS ############ 
 
-# Query ISI for metadata abot a variable
-def isi_metadata(id_value, isi_base_url):
+# Query ISI for metadata about a variable
+def isi_metadata(dataset_id, variable_id, isi_base_url):
 
-    isi_meta_url = f'{isi_base_url}/metadata/datasets/'
-    search_url = isi_meta_url + id_value
-    response = get(search_url)
+    if variable_id == "None":
+        isi_meta_url = f'{isi_base_url}/metadata/datasets/'
+        search_url = isi_meta_url + dataset_id
+        response = get(search_url)
 
-    json_string = response._content
-    raw_meta = json.loads(json_string)
+        json_string = response._content
+        raw_meta = json.loads(json_string)
 
-    isi_meta_results = isi_schema_meta(raw_meta)
+        isi_meta_results = isi_schema_meta(raw_meta, variable_id)
 
-    return isi_meta_results 
-    
+        return isi_meta_results 
 
+    if variable_id != "None":
+
+        search_url = f'{isi_base_url}/metadata/datasets/{dataset_id}/variables/{variable_id}'
+        response = get(search_url)
+
+        json_string = response._content
+        raw_meta = json.loads(json_string)
+
+        isi_meta_results = isi_schema_meta(raw_meta, variable_id)
+
+        return isi_meta_results     
+
+
+
+ #response = get(f'{isi_base_url}/metadata/datasets/{dataset_id}/variables/{variable_id}')
 # format raw results to schema    
-def isi_schema_meta(raw_meta):
+def isi_schema_meta(raw_meta, variable_id):
 
-    #raw_meta is a list with one elem (a dict)
-    raw_dict = raw_meta[0]
-    name = raw_dict['name']
-    descr = raw_dict['description']
-    dataset_id = raw_dict['dataset_id']
-    url = raw_dict['url']
-    source = "None"
-    temporal_resolution = "None"
-    spatial_resolution = "None"
-    z_meta = "None"
+    if variable_id == "None":
+        #raw_meta is a list with one elem (a dict)
+        raw_dict = raw_meta[0]
+        name = raw_dict['name']
+        descr = raw_dict['description']
+        dataset_id = raw_dict['dataset_id']
+        url = raw_dict['url']
+        source = "None"
+        temporal_resolution = "None"
+        spatial_resolution = "None"
+        z_meta = "None"
 
-    isi_meta_results = {"data_location": "ISI",
-                        "name": name,
-                        "description": descr,
-                        "dataset_id": dataset_id,
-                        "source": url,
-                        "temporal_resolution": temporal_resolution,
-                        "spatial_resolution": spatial_resolution,
-                        "z_meta": z_meta 
-                        }
-    
-    return isi_meta_results
+        isi_meta_results = {"data_location": "ISI",
+                            "name": name,
+                            "description": descr,
+                            "dataset_id": dataset_id,
+                            "source": url,
+                            "temporal_resolution": temporal_resolution,
+                            "spatial_resolution": spatial_resolution,
+                            "z_meta": z_meta 
+                            }
+        
+        return isi_meta_results
+
+    if variable_id != "None":
+        #unlike above, raw meta is already a dict...
+        raw_dict = raw_meta
+
+        name = raw_dict.get('name', "None")
+        descr = raw_dict.get('description', "None")
+        dataset_id = raw_dict.get('dataset_id', "None")
+        variable_id = raw_dict.get('variable_id', "None")
+        source = "None"
+        temporal_resolution = "None"
+        spatial_resolution = "None"
+        z_meta = {'corresponds_to_property': raw_dict.get('corresponds_to_property', "None"), 'qualifier':raw_dict.get('qualifier', "None") }
+
+        isi_meta_results = {"data_location": "ISI",
+                            "name": name,
+                            "description": descr,
+                            "dataset_id": dataset_id,
+                            "variable_id": variable_id,
+                            "source": source,
+                            "temporal_resolution": temporal_resolution,
+                            "spatial_resolution": spatial_resolution,
+                            "z_meta": z_meta 
+                            }
+        
+        return isi_meta_results
 
 ############ DOWNLOAD FUNCTION ############# 
 

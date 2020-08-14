@@ -99,7 +99,7 @@ def schema_results(raw_results):
             descr = result['metadata'].get('description', "None")
     
         temp_dict= {"data_location": data_location,
-                    "id_value": dataset_id,
+                    "dataset_id": dataset_id,
                     "name": name,
                     "description": descr,
                     "score": score}
@@ -115,9 +115,9 @@ def schema_results(raw_results):
 ########### METADATA FUNCTIONS ###########
 
 # Make API call for raw metadata results and return swagger schema for output
-def nyu_metadata(id_value, nyu_meta_url):
+def nyu_metadata(dataset_id, nyu_meta_url):
     
-    response = requests.get(nyu_meta_url + id_value)
+    response = requests.get(nyu_meta_url + dataset_id)
     response.raise_for_status()
     response.json()  
 
@@ -134,7 +134,7 @@ def nyu_schema_meta(raw_meta):
     
     name = raw_meta['metadata'].get('name', "None")
     descr = raw_meta['metadata'].get('description', "None")
-    id_value = raw_meta.get('id', "None")
+    dataset_id = raw_meta.get('id', "None")
     source = raw_meta['metadata'].get('source', "None")
     spatial_resolution = raw_meta['metadata']['spatial_coverage'][0].get('admin', "None")
     meta = raw_meta.get('metadata', "None")
@@ -147,7 +147,7 @@ def nyu_schema_meta(raw_meta):
     nyu_meta_results = {"data_location": "NYU",
                         "name": name,
                         "description": descr,
-                        "id_value": id_value,
+                        "dataset_id": dataset_id,
                         "source": source,
                         "temporal_resolution": temporal_resolution,
                         "spatial_resolution": spatial_resolution,
