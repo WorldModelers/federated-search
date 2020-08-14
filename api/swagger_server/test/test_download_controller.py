@@ -27,7 +27,7 @@ class TestDownloadController(BaseTestCase):
 
         Download ISI variables
         """
-        body = ['\"access_to_electricity_of_population\"']
+        body = ['[ \"access_to_electricity_of_population\", \"access_to_clean_fuels_and_technologies_for_cooking_of_population\" ]']
         response = self.client.open(
             '/download_variables/{data_location}/{dataset_id}'.format(data_location='data_location_example', dataset_id='dataset_id_example'),
             method='POST',

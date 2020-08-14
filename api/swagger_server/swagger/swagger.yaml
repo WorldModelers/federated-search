@@ -3,11 +3,10 @@ info:
   title: World Modelers Federated Search API
   description: "A federated search API that negotiates queries across Datamarts and\
     \ the UAZ \nconcept mapping service on behalf of SuperMaaS and CauseMos.\n"
-  version: 1.0.0
+  version: 1.0.1
 servers:
 - url: http://localhost:8080
   description: Local server for testing federated search
-- url: https://wm:worldmodelersdatasearch@wm.auctus.vida-nyu.org/api/v1/
 paths:
   /search:
     post:
@@ -18,10 +17,10 @@ paths:
         Search over Datamarts to find datasets and variables of interest.
       operationId: search_post
       requestBody:
-        description: |
-          Search query definition. _Must_ provide `data_location` and _at least_ one of `[geo, temporal, keywords]` filter.<br> 
-          NYU Options: One, or combo of [geo, temporal, keywords]<br>
-          ISI Option: [Keywords] 
+        description: "Search query definition. _Must_ provide `data_location` and\
+          \ _at least_ one of `[geo, temporal, keywords]` filter.<br> \nNYU Options:\
+          \ One, or combo of [geo, temporal, keywords]<br>\nISI Option: [Keywords]\
+          \ \n"
         content:
           application/json:
             schema:
@@ -38,7 +37,7 @@ paths:
                 type: bbox
                 value:
                   bbox:
-                    latitude1: 14.5
+                    latitude1: 14.9
                     longitude1: 3
                     latitude2: 32
                     longitude2: 46
@@ -76,18 +75,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/search_result'
       x-openapi-router-controller: swagger_server.controllers.search_controller
-  /metadata/{data_location}/{id_value}:
+  /metadata/{data_location}/{dataset_id}:
     get:
       tags:
       - Metadata
       summary: Obtain metadata for ISI/NYU datasets
       description: |
         Obtain metadata for specified datamart and dataset ID
-      operationId: metadata_data_location_id_value_get
+      operationId: metadata_data_location_dataset_id_get
       parameters:
       - name: data_location
         in: path
-        description: "Select Datamart"
+        description: Select Datamart
         required: true
         style: simple
         explode: false
@@ -96,7 +95,7 @@ paths:
           enum:
           - NYU
           - ISI
-      - name: id_value
+      - name: dataset_id
         in: path
         description: Enter dataset_id
         required: true
@@ -104,13 +103,22 @@ paths:
         explode: false
         schema:
           type: string
+      - name: variable_id
+        in: query
+        description: "Optional (ISI Only): Enter <b><i>variable_id</i></b> or <b><i>None</i></b>"
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+        example: None  
       responses:
         "200":
           description: SUCCESS
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/metadata_result'
+                $ref: '#/components/schemas/metadata_result_meta'
       x-openapi-router-controller: swagger_server.controllers.metadata_controller
   /download_variables/{data_location}/{dataset_id}:
     post:
@@ -138,6 +146,7 @@ paths:
         explode: false
         schema:
           type: string
+          default: None
         example: WDI
       requestBody:
         description: |
@@ -148,7 +157,9 @@ paths:
               type: array
               items:
                 type: string
-            example: ["access_to_electricity_of_population", "access_to_clean_fuels_and_technologies_for_cooking_of_population"]
+            example:
+            - access_to_electricity_of_population
+            - access_to_clean_fuels_and_technologies_for_cooking_of_population
         required: true
       responses:
         "200":
@@ -165,7 +176,7 @@ paths:
       tags:
       - Download
       summary: Download NYU datasets
-      description: "NYU ONLY: Download dataset by its daataset_id"
+      description: 'NYU ONLY: Download dataset by its daataset_id'
       operationId: download_data_location_dataset_id_get
       parameters:
       - name: data_location
@@ -200,9 +211,43 @@ paths:
 components:
   schemas:
     search_result:
-      type: array
-      items:
-        $ref: '#/components/schemas/search_result_inner'
+      required:
+      - data_location
+      - dataset_id
+      - name
+      - score
+      type: object
+      properties:
+        data_location:
+          type: string
+          description: The location of the data (e.g. a Datamart)
+          example: NYU
+        dataset_id:
+          type: string
+          description: The id of the dataset or variable within the data location
+          example: NYU-123123123123123
+        variable_id:
+          type: string
+          description: The id of the variable
+          example: VUAZ-8346
+        name:
+          type: string
+          example: WFP dataset
+        description:
+          type: string
+          example: Food prices for Ethiopia
+        score:
+          type: number
+          description: "Ranking of the dataset or variable based on its \nproximity\
+            \ to the search of interest.\n"
+          example: 0.92
+      example:
+        score: 0.92
+        variable_id: VUAZ-8346
+        dataset_id: NYU-123123123123123
+        name: WFP dataset
+        description: Food prices for Ethiopia
+        data_location: NYU
     data_location:
       required:
       - data_location
@@ -246,9 +291,58 @@ components:
           $ref: '#/components/schemas/keyword_search_keywords'
       description: Text based search
     metadata_result:
+      required:
+      - description
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the Dataset
+          example: WFP Prices Eth
+        description:
+          type: string
+          example: World Food Program prices for Ethiopia
+        dataset_id:
+          type: string
+          description: The id of the dataset or variable within the data location
+          example: ISI_wfp_maize
+        variable_id:
+          type: string
+          description: The variable id searched for
+          example: ISI_wfp_maize
+        url:
+          type: string
+          example: http://wfp.com/prices
+        source:
+          type: string
+          example: World Food Program
+        spatial_resolution:
+          type: string
+          example: country
+        temporal_resolution:
+          type: string
+          example: year
+        z_meta:
+          type: array
+          example:
+          - all meta here
+          items:
+            type: object
+      example:
+        z_meta:
+        - all meta here
+        dataset_id: ISI_wfp_maize
+        name: WFP Prices Eth
+        description: World Food Program prices for Ethiopia
+        source: World Food Program
+        temporal_resolution: year
+        url: http://wfp.com/prices
+        spatial_resolution: country
+    metadata_result_meta:
       type: array
       items:
-        $ref: '#/components/schemas/metadata_result_inner'
+        $ref: '#/components/schemas/metadata_result'
     body:
       anyOf:
       - $ref: '#/components/schemas/geospatial_search'
@@ -256,39 +350,6 @@ components:
       - $ref: '#/components/schemas/keyword_search'
       oneOf:
       - $ref: '#/components/schemas/data_location'
-    search_result_inner:
-      required:
-      - data_location
-      - id_value
-      - name
-      - score
-      type: object
-      properties:
-        data_location:
-          type: string
-          description: The location of the data (e.g. a Datamart)
-          example: NYU
-        id_value:
-          type: string
-          description: The id of the dataset or variable within the data location
-          example: NYU-123123123123123
-        name:
-          type: string
-          example: WFP dataset
-        description:
-          type: string
-          example: Food prices for Ethiopia
-        score:
-          type: number
-          description: "Ranking of the dataset or variable based on its \nproximity\
-            \ to the search of interest.\n"
-          example: 0.92
-      example:
-        score: 0.92
-        name: WFP dataset
-        description: Food prices for Ethiopia
-        data_location: NYU
-        id_value: NYU-123123123123123
     temporal_search_time:
       required:
       - end
@@ -314,7 +375,7 @@ components:
         latitude1:
           type: number
           description: The latitude of the top left point.
-          example: 14.5
+          example: 14.9
         longitude1:
           type: number
           description: The longitude of the top left point.
@@ -356,49 +417,4 @@ components:
           - world food price
           items:
             type: string
-    metadata_result_inner:
-      required:
-      - description
-      - name
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the Dataset
-          example: WFP Prices Eth
-        description:
-          type: string
-          example: World Food Program prices for Ethiopia
-        dataset_id:
-          type: string
-          description: The id of the dataset or variable within the data location
-          example: ISI_wfp_maize
-        url:
-          type: string
-          example: http://wfp.com/prices
-        source:
-          type: string
-          example: World Food Program
-        spatial_resolution:
-          type: string
-          example: country
-        temporal_resolution:
-          type: string
-          example: year
-        meta:
-          type: array
-          example:
-          - all meta here
-          items:
-            type: array
-      example:
-        meta:
-        - all meta here
-        dataset_id: ISI_wfp_maize
-        name: WFP Prices Eth
-        description: World Food Program prices for Ethiopia
-        source: World Food Program
-        temporal_resolution: year
-        url: http://wfp.com/prices
-        spatial_resolution: country
 
