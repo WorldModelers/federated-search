@@ -105,7 +105,7 @@ paths:
           type: string
       - name: variable_id
         in: query
-        description: "Optional (ISI Only): Enter <b><i>variable_id</i></b>"
+        description: "*ISI Only*: variable_id or leave blank"
         required: false
         style: form
         explode: true
