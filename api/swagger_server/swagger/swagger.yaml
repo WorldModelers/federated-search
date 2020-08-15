@@ -37,10 +37,10 @@ paths:
                 type: bbox
                 value:
                   bbox:
-                    latitude1: 14.9
-                    longitude1: 3
-                    latitude2: 32
-                    longitude2: 46
+                    latitude1: 16.0
+                    longitude1: 33
+                    latitude2: 2
+                    longitude2: 49.5
         required: true
       responses:
         "200":
