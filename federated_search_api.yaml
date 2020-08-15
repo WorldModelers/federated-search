@@ -1,14 +1,12 @@
 openapi: 3.0.0
 info:
   title: World Modelers Federated Search API
-  description: |
-    A federated search API that negotiates queries across Datamarts and the UAZ 
-    concept mapping service on behalf of SuperMaaS and CauseMos.
-  version: 1.0.0
+  description: "A federated search API that negotiates queries across Datamarts and\
+    \ the UAZ \nconcept mapping service on behalf of SuperMaaS and CauseMos.\n"
+  version: 1.0.1
 servers:
-  - url: http://localhost:8080
-    description: Local server for testing federated search
-
+- url: http://localhost:8080
+  description: Local server for testing federated search
 paths:
   /search:
     post:
@@ -16,41 +14,42 @@ paths:
       - Search
       summary: Search over Datamarts
       description: |
-        Search over Datamarts in order to find datasets and variables of interest.
+        Search over Datamarts to find datasets and variables of interest.
+      operationId: search_post
       requestBody:
         description: |
-          Search query definition. Must provide `data_location` and _should_ provide 
-          at least one a `[geo, temporal, keyword]` filter.
-        required: true
+          Search query definition. _Must_ provide `data_location` and _at least_ one of `[geo, temporal, keywords]` filter.<br> 
+          NYU Options: One, or combo of [geo, temporal, keywords]<br>
+          ISI Option: [Keywords] 
         content:
           application/json:
             schema:
-              anyOf:
-                - $ref: '#/components/schemas/geospatial_search'
-                - $ref: '#/components/schemas/temporal_search'
-                - $ref: '#/components/schemas/keyword_search'            
-              oneOf:
-                - $ref: '#/components/schemas/data_location'
-            example: 
-              data_location: ISI
-              keywords: 
-                [wfp, world food prices]
-              time: 
-                {start: "2018-01-01 00:00:00",
-                 end: "2020-08-31 00:00:00"}
-              geo: 
-                {latitude1: 48.5, 
-                 longitude1: -123.1, 
-                 latitude2: 48.2, 
-                 longitude2: -122.5}
+              $ref: '#/components/schemas/body'
+            example:
+              data_location: NYU
+              keywords:
+              - wfp
+              - world food prices
+              time:
+                start: '2010-01-01 00:00:00'
+                end: '2020-08-31 00:00:00'
+              geo:
+                type: bbox
+                value:
+                  bbox:
+                    latitude1: 14.9
+                    longitude1: 3
+                    latitude2: 32
+                    longitude2: 46
+        required: true
       responses:
-        200:
-          description: "SUCCESS"
+        "200":
+          description: SUCCESS
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/search_result'
-                
+  
   /search_concepts/{concept_name}:
     get:
       tags:
@@ -59,204 +58,346 @@ paths:
       description: |
         Search based on concepts from the [World Modelers Ontology](https://github.com/worldmodelers/ontologies)
       parameters:
-        - in: path
-          name: concept_name
-          schema:
-            type: string
-          required: true
-          description: World Modelers ontology concept
+      - name: concept_name
+        in: path
+        description: World Modelers ontology concept
+        required: true
+        schema:
+          type: string
       responses:
-        200:
-          description: "SUCCESS"
+        "200":
+          description: SUCCESS
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/search_result'
-
-  /metadata/{data_location}/{id}:
+  
+  /metadata/{data_location}/{dataset_id}:
     get:
       tags:
       - Metadata
-      summary: Obtain variabile/dataset metadata
-      description: Obtain metadata for specified datamart and dataset/variable ID
+      summary: Obtain metadata for ISI/NYU datasets
+      description: |
+        Obtain metadata for specified datamart and dataset ID
       parameters:
-        - in: path
-          name: data_location
-          schema:
-            type: string
-          required: true
-          description: datamart from which data is downloaded
-        - in: path  
-          name: id
-          schema:
-            type: string
-          required: true
-          description: dataset_id (NYU) or variable_id (ISI)
-          
+      - name: data_location
+        in: path
+        description: "Select Datamart"
+        required: true
+        schema:
+          type: string
+          enum:
+          - NYU
+          - ISI
+          - All
+      - name: dataset_id
+        in: path
+        description: Enter dataset_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: variable_id
+        description: Enter variable_id (ISI Only)
+        required: false
+        schema:
+          type: string
       responses:
-        200:
-          description: "SUCCESS"
+        "200":
+          description: SUCCESS
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/metadata_result'  
-                
-
-  /download/{data_location}/{id}:
-    get:
+                $ref: '#/components/schemas/metadata_result_meta'
+  
+  /download_variables/{data_location}/{dataset_id}:
+    post:
       tags:
       - Download
-      summary: Download datasets
-      description: Download a full dataset by its ID
+      summary: Download ISI variables
+      description: |
+        ISI ONLY: Download variables into single file from an ISI dataset
       parameters:
-      - in: path
-        name: data_location
+      - name: data_location
+        in: path
+        required: true
         schema:
           type: string
+          enum:
+          - ISI
+        example: ISI
+      - name: dataset_id
+        in: path
         required: true
-        example: NYU
-      - in: path
-        name: id
-        description: dataset_id of dataset
         schema:
           type: string
+        example: WDI
+      requestBody:
+        description: |
+          Enter the ISI variable_IDs you would like to download. At least one is required.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+            example: ["access_to_electricity_of_population", "access_to_clean_fuels_and_technologies_for_cooking_of_population"]
         required: true
-        example: "NYU-123123123123123"
       responses:
-        '200':
-          description: "Return a csv file"
+        "200":
+          description: Return a csv file
           content:
             text/csv:
               schema:
                 type: string
-                format: binary            
+                format: binary
+                x-content-type: text/csv
 
+  /download/{data_location}/{dataset_id}:
+    get:
+      tags:
+      - Download
+      summary: Download NYU datasets
+      description: "NYU ONLY: Download dataset by its daataset_id"
+      parameters:
+      - name: data_location
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - NYU
+        example: NYU
+      - name: dataset_id
+        in: path
+        description: dataset_id of dataset
+        required: true
+        schema:
+          type: string
+        example: NYU-123123123
+      responses:
+        "200":
+          description: Return a csv file
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+                x-content-type: text/csv
 components:
   schemas:
     search_result:
-      type: array
-      items:
-        type: object
-        properties:
-          data_location:
-            type: string
-            description: The location of the data (e.g. a Datamart)
-            example: NYU
-          id:
-            type: string
-            description: The id of the dataset or variable within the data location
-            example: "NYU-123123123123123"
-          score: 
-            type: number
-            description: |
-              Ranking of the dataset or variable based on its 
-              proximity to the search of interest.
-            example: 0.92
-        required:
-        - data_location
-        - id
-        - score      
-        
-    data_location:
+      required:
+      - data_location
+      - dataset_id
+      - name
+      - score
       type: object
-      description: The location of the data
       properties:
         data_location:
           type: string
-          enum:
-            - ISI
-            - NYU
-            - All
-          default: All
-          example: ISI
-      required: 
+          description: The location of the data (e.g. a Datamart)
+          example: NYU
+        dataset_id:
+          type: string
+          description: The id of the dataset or variable within the data location
+          example: NYU-123123123123123
+        variable_id:
+          type: string
+          description: The id of the variable
+          example: VUAZ-8346
+        name:
+          type: string
+          example: WFP dataset
+        description:
+          type: string
+          example: Food prices for Ethiopia
+        score:
+          type: number
+          description: "Ranking of the dataset or variable based on its \nproximity\
+            \ to the search of interest.\n"
+          example: 0.92  
+          
+    data_location:
+      required:
       - data_location
-  
+      type: object
+      properties:
+        data_location:
+          type: string
+          example: NYU
+          default: All
+          enum:
+          - ISI
+          - NYU
+          - All
+      description: The location of the data
+    
     temporal_search:
       type: object
-      description: Describes columns containing temporal information.
       properties:
         time:
-          type: object
-          properties:
-            start:
-              type: string
-              description: Dates-of-interest are more recent than this date
-              example: "2018-01-01 00:00:00"
-            end:
-              type: string
-              description: Dates-of-interest are older than this date
-              example: "2020-08-31 23:00:00"
-          required:
-          - start
-          - end
-      
+          $ref: '#/components/schemas/temporal_search_time'
+      description: Describes columns containing temporal information.
+    
     geospatial_search:
-        type: object
-        description: Describes columns containing geospatial entities. West and South are negative.
-        properties:
-          geo:
-            type: object
-            properties:
-              latitude1:
-                type: number
-                description: The latitude of the top left point.
-                example: 14.5
-              longitude1:
-                type: number
-                description: The longitude of the top left point.
-                example: 3.0
-              latitude2:
-                type: number
-                description: The latitude of the bottom right point.
-                example: 32.6
-              longitude2:
-                type: number
-                description: The longitude of the bottom right point.
-                example: 46.8
-            required:
-            - latitude1
-            - longitude1
-            - latitude2
-            - longitude2
-        
+      required:
+      - type
+      - value
+      type: object
+      properties:
+        type:
+          type: string
+          description: either bbox or place
+          enum:
+          - place
+          - bbox
+        value:
+          $ref: '#/components/schemas/geospatial_search_value'
+      description: Describes columns containing geospatial entities. West and South
+        are negative.
+    
     keyword_search:
       type: object
-      description: Text based search  
       properties:
         keywords:
+          $ref: '#/components/schemas/keyword_search_keywords'
+      description: Text based search
+  
+    metadata_result:
+          required:
+          - description
+          - name
           type: object
           properties:
-            keywords:
+            name:
+              type: string
+              description: Name of the Dataset
+              example: WFP Prices Eth
+            description:
+              type: string
+              example: World Food Program prices for Ethiopia
+            dataset_id:
+              type: string
+              description: The id of the dataset or variable within the data location
+              example: ISI_wfp_maize
+            variable_id:
+              type: string
+              description: The variable id searched for
+              example: ISI_wfp_maize
+            url:
+              type: string
+              example: http://wfp.com/prices
+            source:
+              type: string
+              example: World Food Program
+            spatial_resolution:
+              type: string
+              example: country
+            temporal_resolution:
+              type: string
+              example: year
+            z_meta:
               type: array
               items:
-                type: string
-              example: [wfp, world food price]
-          required:
-          - keywords
-
-    metadata_result:
+                type: object
+              example:
+              - all meta here
+ 
+          example:
+            z_meta:
+            - all meta here
+            dataset_id: ISI_wfp_maize
+            name: WFP Prices Eth
+            description: World Food Program prices for Ethiopia
+            source: World Food Program
+            temporal_resolution: year
+            url: http://wfp.com/prices
+            spatial_resolution: country    
+    
+    
+    metadata_result_meta:
       type: array
       items:
-        type: object
-        properties:
-          name:
+        $ref: '#/components/schemas/metadata_result'
+    body:
+      anyOf:
+      - $ref: '#/components/schemas/geospatial_search'
+      - $ref: '#/components/schemas/temporal_search'
+      - $ref: '#/components/schemas/keyword_search'
+      oneOf:
+      - $ref: '#/components/schemas/data_location'
+    
+    temporal_search_time:
+      required:
+      - end
+      - start
+      type: object
+      properties:
+        start:
+          type: string
+          description: Dates-of-interest are more recent than this date
+          example: '2018-01-01 00:00:00'
+        end:
+          type: string
+          description: Dates-of-interest are older than this date
+          example: '2020-08-31 23:00:00'
+    
+    geospatial_search_value_bbox:
+      required:
+      - latitude1
+      - latitude2
+      - longitude1
+      - longitude2
+      type: object
+      properties:
+        latitude1:
+          type: number
+          description: The latitude of the top left point.
+          example: 14.9
+        longitude1:
+          type: number
+          description: The longitude of the top left point.
+          example: 3
+        latitude2:
+          type: number
+          description: The latitude of the bottom right point.
+          example: 32.6
+        longitude2:
+          type: number
+          description: The longitude of the bottom right point.
+          example: 46.8
+    
+    geospatial_search_value_place:
+      required:
+      - area_name
+      type: object
+      properties:
+        area_name:
+          type: array
+          example: Ethiopia
+          items:
             type: string
-            description: Name of the Dataset
-            example: WFP Prices Eth
-          description:
+      description: list of names/places to search
+    
+    geospatial_search_value:
+      properties:
+        bbox:
+          $ref: '#/components/schemas/geospatial_search_value_bbox'
+        place:
+          $ref: '#/components/schemas/geospatial_search_value_place'
+    
+    keyword_search_keywords:
+      required:
+      - keywords
+      type: object
+      properties:
+        keywords:
+          type: array
+          example:
+          - wfp
+          - world food price
+          items:
             type: string
-            example: World Food Program prices for Ethiopia
-          dataset_id:
-            type: string
-            description: The id of the dataset or variable within the data location
-            example: ISI_wfp_maize            
-          url:
-            type: string
-            example: http://wfp.com/prices
-          source:
-            type: string
-            example: World Food Program
-        required: 
-        - name
-        - description
+ 
+
