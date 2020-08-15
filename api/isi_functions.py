@@ -124,8 +124,8 @@ def urlify_search_keywords(body, base_url):
 
 # Query ISI for metadata about a variable
 def isi_metadata(dataset_id, variable_id, isi_base_url):
-
-    if variable_id == "None":
+    print(dataset_id, variable_id)
+    if variable_id == None:
         isi_meta_url = f'{isi_base_url}/metadata/datasets/'
         search_url = isi_meta_url + dataset_id
         response = get(search_url)
@@ -134,10 +134,10 @@ def isi_metadata(dataset_id, variable_id, isi_base_url):
         raw_meta = json.loads(json_string)
 
         isi_meta_results = isi_schema_meta(raw_meta, variable_id)
-
+        print(isi_meta_results)
         return isi_meta_results 
 
-    if variable_id != "None":
+    if variable_id != None:
 
         search_url = f'{isi_base_url}/metadata/datasets/{dataset_id}/variables/{variable_id}'
         response = get(search_url)
@@ -155,7 +155,7 @@ def isi_metadata(dataset_id, variable_id, isi_base_url):
 # format raw results to schema    
 def isi_schema_meta(raw_meta, variable_id):
 
-    if variable_id == "None":
+    if variable_id == None:
         #raw_meta is a list with one elem (a dict)
         raw_dict = raw_meta[0]
         name = raw_dict['name']
@@ -179,7 +179,7 @@ def isi_schema_meta(raw_meta, variable_id):
         
         return isi_meta_results
 
-    if variable_id != "None":
+    if variable_id != None:
         #unlike above, raw meta is already a dict...
         raw_dict = raw_meta
 
