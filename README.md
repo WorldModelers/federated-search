@@ -11,4 +11,4 @@ The Open API Specification file for this API is contained in [`federated_search_
 
 ![Example API Call](images/api_call1.png)
 
-In the future, this repository will house server code that manages this API.
+This repository houses server code that manages this API.
