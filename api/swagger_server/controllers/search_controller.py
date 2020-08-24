@@ -7,13 +7,21 @@ from swagger_server import util
 
 
 from itertools import chain
+from requests import get,post,put,delete
+from io import StringIO
+import pandas as pd
+import configparser
+import requests
+import json
+import copy
+import os
 import configparser
 import requests
 import os
 
 import nyu_functions as nyu
 import isi_functions as isi
-
+import uaz_functions as uaz
 
 # Get Credentials
 wrk_dir = os.getcwd()
@@ -30,20 +38,19 @@ nyu_pwd = config['NYU']['password']
 
 
 # Search for UAZ concept indicators 
-def search_concepts_concept_name_get(concept_name):
+def search_concepts_concept_name_get(concept_name, maxHits=100):
 
-    tbd = "WORK IN PROGRESS...Your concept is: " + concept_name
-
-    result = [ {"TBD": tbd},
-               {"data_location": "TBD",
-               "description": "TBD",
-               "dataset_id": "TBD",
-               "name": "TBD",
-               "score": "TBD"
-               }
-               ]
+    endpoint = 'http://linking.cs.arizona.edu/v1/search?query='
     
-    return result
+    search_url = uaz.urlify(endpoint, concept_name, maxHits)
+    response = get(search_url)
+
+    json_string = str(response._content, 'utf-8')
+    raw_uaz = json.loads(json_string)
+
+    uaz_results = uaz.schema_results_uaz(raw_uaz)
+
+    return uaz_results
 
 
 # Search over Datamarts to find datasets and variables of interest.
@@ -56,7 +63,8 @@ def search_post(body):
     all_search_results=[]
     # All Search
     if body['data_location'] == "All": 
-
+ 
+        # Limfac is ISI with keyword search only...
         param_errors = isi.isi_search_validate(body)  
 
         if param_errors != []:
