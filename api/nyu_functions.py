@@ -102,13 +102,13 @@ def delete_min_score(results):
     occ = [(i, ids.count(i)) for i in ids]
     index_list = [ (occ[i][0], i) for i in range(len(occ)) if occ[i][1] >1 ]
     
-    scored = []
-    for duped in index_list:
-        ind = duped[1]
-        score = results[ind]['score']
-        scored.append((ind, score))  
-    
-    if scored != []:
+    if index_list != []:
+        scored = []
+        for duped in index_list:
+            ind = duped[1]
+            score = results[ind]['score']
+            scored.append((ind, score))  
+        
         #ridiculous
         score_min = 1000000
 
