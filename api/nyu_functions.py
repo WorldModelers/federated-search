@@ -6,6 +6,7 @@ Created on Mon Aug  3 13:13:55 2020
 @author: travishartman
 """
 
+from itertools import chain
 from requests import get,post,put,delete
 import requests
 import json
@@ -66,21 +67,68 @@ def nyu_search(body, nyu_url):
         #check for data and format query key "variables" into list of dicts
         checker = [geo,time]
         checked = [x for x in checker if x != {}]
-      
-        query = [{
-                "keywords": keywords,
-                "variables": checked
-                 }]
+        
+        all_keywords_nyu = []
+        for words in keywords:
+            query = [{
+                    "keywords": words,
+                    "variables": checked
+                     }]
 
-        #  call server
-        response = requests.post(nyu_url, data={'query': json.dumps(query[0])})
-        response.raise_for_status()
-        raw_results = response.json()['results']   
+            #  call server
+            #print(f'query: {query}')
+            response = requests.post(nyu_url, data={'query': json.dumps(query[0])})
+            response.raise_for_status()
+            raw_results = response.json()['results']
+
+            #format to schema
+            nyu_results = schema_results(raw_results)
+            all_keywords_nyu.append(nyu_results)
+
+        all_keywords_nyu = list(chain.from_iterable(all_keywords_nyu))
         
-        #format to schema
-        nyu_results = schema_results(raw_results)
-        
-        return nyu_results
+        nyu_search_results = delete_min_score(all_keywords_nyu)
+           
+        return nyu_search_results
+
+
+# delete duplicates returned from multiple keyword searches and return HIGHEST score
+def delete_min_score(results):
+    
+    # list of dataset_ids
+    ids = [_id["dataset_id"] for _id in results]
+
+    # count occurences of each dataset_id and get index   
+    occ = [(i, ids.count(i)) for i in ids]
+    index_list = [ (occ[i][0], i) for i in range(len(occ)) if occ[i][1] >1 ]
+    
+    scored = []
+    for duped in index_list:
+        ind = duped[1]
+        score = results[ind]['score']
+        scored.append((ind, score))  
+    
+    if scored != []:
+        #ridiculous
+        score_min = 1000000
+
+        #find min score
+        for i in scored:
+            ind_ = i[0]
+            temp_score = i[1]
+            if temp_score < score_min:
+                score_min = temp_score
+                min_ind = ind_
+
+        print(f'Deleted Duplicate: {results[min_ind]}')
+        del results[min_ind] 
+        return results
+    
+    #nothing to delete...
+    else:
+        print(f'No Duplicates found')      
+        return results
+
 
 #Format response result to swagger schema
 def schema_results(raw_results):
@@ -105,9 +153,7 @@ def schema_results(raw_results):
                     "score": score}
 
         schema_results.append(temp_dict)
-    
-    # testing...    
-    #schema_results = json.dumps(schema_results, indent = 4) 
+
      
     return schema_results
 
