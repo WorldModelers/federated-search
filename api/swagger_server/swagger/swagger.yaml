@@ -213,7 +213,6 @@ components:
       required:
       - data_location
       - dataset_id
-      - name
       - score
       type: object
       properties:
