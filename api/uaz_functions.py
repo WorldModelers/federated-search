@@ -2,7 +2,6 @@ from requests import get,post,put,delete
 import json
 import pandas as pd
 from io import StringIO
-from IPython.display import display, HTML
 
 def urlify(endpoint, keywords, maxHits=100):
 
@@ -10,19 +9,14 @@ def urlify(endpoint, keywords, maxHits=100):
     amp_keywords=[]
 
     for words in keywords:
-
         new_word = words.replace(" ", "%20")
         amp_keywords.append(new_word)
 
-
     keyword_string ='%20'.join(amp_keywords)
-
     maxit = f'&maxHits={maxHits}'
-
     search_url = endpoint + keyword_string + maxit
     
     return search_url
-
 
 #Format response result to swagger schema
 def schema_results_uaz(raw_uaz):
