@@ -52,7 +52,6 @@ def search_concepts_concept_name_get(concept_name, maxHits=100):
 
     return uaz_results
 
-
 # Search over Datamarts to find datasets and variables of interest.
 def search_post(body):
     
@@ -76,7 +75,7 @@ def search_post(body):
             nyu_search_results = nyu.nyu_search(body, nyu_search_url)
 
             #ISI API hit
-            isi_search_url= f'https://{isi_user}:{isi_pwd}@dsbox02.isi.edu:8888/datamart-api-wm/metadata/variables?keyword=' 
+            isi_search_url= f'https://{isi_user}:{isi_pwd}@dsbox02.isi.edu:8888/datamart-api-wm/metadata/variables?' 
             isi_search_results = isi.isi_search(body, isi_search_url)
  
             # add results together
@@ -96,7 +95,6 @@ def search_post(body):
         
         return nyu_search_results
     
-    
     # ISI Search
     if body['data_location'] == "ISI": 
                                                                                            
@@ -104,9 +102,5 @@ def search_post(body):
         isi_search_results = isi.isi_search(body, isi_search_url)
 
         return isi_search_results
-
-
-
-
 
 
