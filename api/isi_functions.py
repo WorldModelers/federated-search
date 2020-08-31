@@ -106,8 +106,9 @@ def isi_search_validate(body):
 # Take user's keywords and format into url string to send to ISI server    
 def urlify_search_keywords(body, base_url):
   
+    # EXAMPLES:
     # base_url: ...        /metadata/variables?
-    # keywords ONly        /metadata/variables?keyword=
+    # keywords Only        /metadata/variables?keyword=
     # Country Only:        /metadata/variables?country=Ethiopia
     # Keyword and Country: /metadata/variables?keyword=road&country=Ethiopia
 
@@ -170,9 +171,6 @@ def isi_metadata(dataset_id, variable_id, isi_base_url):
 
         return isi_meta_results     
 
-
-
- #response = get(f'{isi_base_url}/metadata/datasets/{dataset_id}/variables/{variable_id}')
 # format raw results to schema    
 def isi_schema_meta(raw_meta, variable_id):
 
