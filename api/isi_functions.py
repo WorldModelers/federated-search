@@ -29,19 +29,20 @@ def isi_search(body, base_url):
 
     else:
         # KEYWORD SEARCH
-        if body.get("keywords", "None") != "None":
-            # call urlify function to format url search string, searches " OR" keywords (not "and")
-            search_url = urlify_search_keywords(body, base_url)
-            
-            #send get call to server
-            response = get(search_url)
-            json_string = response._content
-            raw_results = json.loads(json_string)
-            
-            # call schema function to get into swagger schema format
-            isi_keyword_results = isi_schema_results(raw_results)
+        # call urlify function to format url search string, searches " OR" keywords (not "and")
+        search_url = urlify_search_keywords(body, base_url)
+        
+        print(search_url)
 
-            return isi_keyword_results
+        #send get call to server
+        response = get(search_url)
+        json_string = response._content
+        raw_results = json.loads(json_string)
+        
+        # call schema function to get into swagger schema format
+        isi_keyword_results = isi_schema_results(raw_results)
+
+        return isi_keyword_results
   
 
 # transform raw return into schema format
@@ -81,7 +82,7 @@ def isi_search_validate(body):
     get_data ={"keywords": body.get("keywords", {}),
                "geo": body.get('geo', {}).get('type', {}),
                "time": body.get("time", {})
-              }
+              }       
 
     #overall check, ensure not null search
     tah = [v for k,v in get_data.items() if v != {}]
@@ -92,8 +93,8 @@ def isi_search_validate(body):
 
     else:
         #Check for specific keys
-        if get_data['geo'] != {}:
-            geo_error = 'Error: ISI does not support geospatial searches; remove the geo filter.'
+        if get_data['geo'] == 'bbox':
+            geo_error = 'Error: ISI does not support bounding box searches; remove the bbox filter.'
             vlad.append(geo_error)
         
         if get_data['time'] != {}:           
@@ -104,19 +105,39 @@ def isi_search_validate(body):
 
 # Take user's keywords and format into url string to send to ISI server    
 def urlify_search_keywords(body, base_url):
+  
+    # base_url: ...        /metadata/variables?
+    # keywords ONly        /metadata/variables?keyword=
+    # Country Only:        /metadata/variables?country=Ethiopia
+    # Keyword and Country: /metadata/variables?keyword=road&country=Ethiopia
 
     amp_keywords=[]
 
     keywords = body.get('keywords', "None")
+    
+    if body.get('geo', "None") != "None":
+        if body['geo']['type'] == 'place':
+            country = body['geo']['value']['place']['area_name']
+    else:
+        country = "None"
 
+    # Keywords and maybe Country:    
     if keywords != "None":
         for words in body['keywords']:
             new_word = words.replace(" ", "%20")
             amp_keywords.append(new_word)
         
-        keyword_string ='&'.join(amp_keywords)
+        keyword_string ='&'.join(amp_keywords).strip()
         
-        search_url = base_url + keyword_string.strip()
+        if country != "None":
+            keyword_string =  keyword_string.strip() + '&country=' + country
+
+        search_url = base_url + 'keyword=' + keyword_string
+
+    # Country ONLY:    
+    if keywords == "None" and country != "None":
+
+        search_url =  base_url + 'country=' + country
 
     return search_url
 
