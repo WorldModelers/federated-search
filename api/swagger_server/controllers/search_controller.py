@@ -99,8 +99,8 @@ def search_post(body):
     
     # ISI Search
     if body['data_location'] == "ISI": 
-
-        isi_search_url= f'https://{isi_user}:{isi_pwd}@dsbox02.isi.edu:8888/datamart-api-wm/metadata/variables?keyword=' 
+                                                                                           
+        isi_search_url= f'https://{isi_user}:{isi_pwd}@dsbox02.isi.edu:8888/datamart-api-wm/metadata/variables?'
         isi_search_results = isi.isi_search(body, isi_search_url)
 
         return isi_search_results
